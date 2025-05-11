@@ -1,6 +1,4 @@
-# ============================================================
-# Section 1: Imports
-# ============================================================
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -8,18 +6,14 @@ import altair as alt
 import random
 from datetime import datetime, timedelta, date
 
-# ============================================================
-# Section 2: Page config
-# ============================================================
+
 st.set_page_config(
     page_title="Sales Pipeline Dashboard",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ============================================================
-# Section 3: Header
-# ============================================================
+
 st.title("📊 Sales Pipeline Management Dashboard")
 st.markdown(
     """
@@ -28,9 +22,7 @@ st.markdown(
     """
 )
 
-# ============================================================
-# Section 4: Sidebar controls
-# ============================================================
+
 st.sidebar.header("Filters & Settings")
 n_deals = st.sidebar.slider("Number of deals", 100, 2000, 500, 100)
 start_date = st.sidebar.date_input("Start Date", date.today() - timedelta(days=90))
@@ -45,18 +37,14 @@ reps   = st.sidebar.multiselect("Sales Reps",   all_reps,   default=all_reps)
 stages = st.sidebar.multiselect("Deal Stages", all_stages, default=all_stages)
 stalled_th = st.sidebar.slider("Stalled Threshold (days)", 10, 60, 30, 5)
 
-# ============================================================
-# Section 5: Regeneration logic via session_state
-# ============================================================
+
 if "seed" not in st.session_state:
     st.session_state.seed = 42
 
 if st.sidebar.button("Regenerate Data"):
     st.session_state.seed = random.randint(0, 1_000_000)
 
-# ============================================================
-# Section 6: Data generation
-# ============================================================
+
 @st.cache_data
 def gen_data(n: int, seed: int) -> pd.DataFrame:
     np.random.seed(seed)
@@ -84,16 +72,12 @@ def gen_data(n: int, seed: int) -> pd.DataFrame:
         })
     return pd.DataFrame(rows)
 
-# ============================================================
-# Section 7: Load & filter
-# ============================================================
+
 df = gen_data(n_deals, st.session_state.seed)
 df = df[df["created"].dt.date.between(start_date, end_date)]
 df = df[df["rep"].isin(reps) & df["stage"].isin(stages)]
 
-# ============================================================
-# Section 8: KPI row
-# ============================================================
+
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Deals", df.shape[0])
 
@@ -106,9 +90,7 @@ c3.metric("Avg Deal Value", f"${avg_val:,.0f}")
 med_time = df["time_in_stage"].median() if not df.empty else 0
 c4.metric("Median Time (days)", f"{med_time:.0f} d")
 
-# ============================================================
-# Section 9: Status pie
-# ============================================================
+
 status_counts = (
     df["status"]
     .value_counts()
@@ -126,9 +108,7 @@ pie = (
 )
 st.altair_chart(pie, use_container_width=True)
 
-# ============================================================
-# Section 10: Open funnel
-# ============================================================
+
 funnel_df = (
     df[df["status"]=="Open"]["stage"]
     .value_counts()
@@ -147,9 +127,7 @@ funnel = (
 )
 st.altair_chart(funnel, use_container_width=True)
 
-# ============================================================
-# Section 11: Deals by rep
-# ============================================================
+
 rep_counts = (
     df["rep"]
     .value_counts()
@@ -167,9 +145,7 @@ bar_rep = (
 )
 st.altair_chart(bar_rep, use_container_width=True)
 
-# ============================================================
-# Section 12: Avg time by stage
-# ============================================================
+
 avg_time = (
     df.groupby("stage")["time_in_stage"]
     .mean()
@@ -188,9 +164,7 @@ bar_time = (
 )
 st.altair_chart(bar_time, use_container_width=True)
 
-# ============================================================
-# Section 13: Deals over time
-# ============================================================
+
 ts = (
     df.set_index("created")
     .resample("W")["rep"]
@@ -208,9 +182,7 @@ line_ts = (
 )
 st.altair_chart(line_ts, use_container_width=True)
 
-# ============================================================
-# Section 14: Time-in-stage hist
-# ============================================================
+
 hist = (
     alt.Chart(df)
     .mark_bar()
@@ -222,9 +194,7 @@ hist = (
 )
 st.altair_chart(hist, use_container_width=True)
 
-# ============================================================
-# Section 15: Stalled deals table
-# ============================================================
+
 st.header("🔍 Stalled Deals")
 st.write("Open deals where time in stage > threshold:")
 st.dataframe(
@@ -233,9 +203,7 @@ st.dataframe(
     ]
 )
 
-# ============================================================
-# Section 16: Insights
-# ============================================================
+
 st.header("💡 Insights & Next Steps")
 st.markdown(
     """
